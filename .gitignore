@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+gismap_env/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Django
+*.sqlite3
+db.sqlite3
+*.db
+
+# Large geospatial data files（太大，超过 Gitee 100MB 限制）
+data/
+GDAL/
+
+# GeoServer data & logs
+gis-infra/geoserver-data/logs/
+gis-infra/postgis-data/
+
+# Fonts（由 Docker 挂载处理）
+gis-infra/fonts/
+
+# OS
+.DS_Store
+Thumbs.db

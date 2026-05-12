@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+
+  postgis:
+    image: postgis/postgis:16-3.4 # 这是 PostGIS 镜像，可以根据需要改成其他版本
+    container_name: postgis # 容器名，可自定义，但 GeoServer 连接 host 时要保持一致
+    restart: always
+
+    environment:
+      POSTGRES_DB: gis #  可以改成你自己的数据库名
+      POSTGRES_USER: postgres #  可以改成你自己的用户名
+      POSTGRES_PASSWORD: 123456 #  必须改成强密码，尤其是云端
+
+    ports:
+      - "5433:5432" #  如果本地有 PostgreSQL 冲突，可改成其他端口 这里我改成了5433
+
+    volumes:
+      - ./postgis-data:/var/lib/postgresql/data #  本地目录映射，可自定义路径
+
+  geoserver:
+    image: kartoza/geoserver #  GeoServer 官方 Docker 镜像
+    container_name: geoserver # 容器名，可自定义，但访问 URL 不变
+    restart: always
+
+    ports:
+      - "8084:8080" #  映射端口，可改，8084 是宿主机访问端口
+
+    environment:
+      GEOSERVER_ADMIN_USER: admin #  默认管理员用户名，可改
+      GEOSERVER_ADMIN_PASSWORD: 164523 #  默认密码，一定要改
+      DISABLE_CORS: true #  禁用镜像默认的 CORS，避免与自定义配置重复
+
+    volumes:
+      - ./geoserver-data:/opt/geoserver/data_dir #  数据目录映射，可自定义
+      - ./fonts:/usr/share/fonts/custom #  字体挂载，本地或云端需要有字体文件或使用开源字体
+      - ./web.xml:/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml #  挂载自定义 web.xml（含 CORS 配置）
+
+    depends_on:
+      - postgis # ✅ 保持不变，确保 GeoServer 启动前 PostGIS 已就绪

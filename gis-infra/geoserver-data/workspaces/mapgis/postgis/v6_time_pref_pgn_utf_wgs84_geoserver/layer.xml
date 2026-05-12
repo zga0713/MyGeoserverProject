@@ -1,0 +1,16 @@
+<layer>
+  <name>v6_time_pref_pgn_utf_wgs84_geoserver</name>
+  <id>LayerInfoImpl--7e1721ba:19e1046a25d:-7ff7</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--7e1721ba:19e1046a25d:-8000</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl--7e1721ba:19e1046a25d:-7ff8</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2026-05-10 05:20:27.747 UTC</dateCreated>
+</layer>

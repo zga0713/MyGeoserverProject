@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>openlayer生成GML</title>
+  <link href="ol/ol.css" rel="stylesheet" />
+  <script src="ol/ol.js"></script>
+  <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map,
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+    }
+
+    form.form-inline {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 12px 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+
+    form.form-inline select,
+    form.form-inline input[type="button"] {
+      margin-left: 4px;
+      padding: 4px 8px;
+      font-size: 14px;
+      border: 1px solid #c0c0c0;
+      border-radius: 3px;
+    }
+
+    form.form-inline label {
+      margin-right: 4px;
+    }
+
+    form.form-inline label+label {
+      margin-left: 12px;
+    }
+
+    form.form-inline input[type="button"] {
+      background: #C00000;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    form.form-inline input[type="button"]:hover {
+      background: #a00000;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <form class="form-inline">
+    <label>操作方式</label>
+    <select id="interaction">
+      <option value="draw">draw</option>
+      <option value="select">select</option>
+      <option value="modify">modify</option>
+    </select>
+    <label>几何类型</label>
+    <select id="geometryType">
+      <option value="Point">Point</option>
+      <option value="LineString">LineString</option>
+      <option value="Polygon">Polygon</option>
+      <option value="Circle">Circle</option>
+      <option value="None">None</option>
+    </select>
+    <label>选中要素后</label>
+    <input type="button" id="creategml" value="生成GML" />
+  </form>
+  <script>
+    const layers = [
+      new ol.layer.Tile({
+        source: new ol.source.XYZ({
+          url: "http://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0"
+        })
+      })
+    ];
+    const source = new ol.source.Vector({ wrapX: false });
+    const vectorLayer = new ol.layer.Vector({
+      source: source
+    });
+    const view = new ol.View({
+      center: ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857'),
+      zoom: 9
+    });
+    const map = new ol.Map({
+      layers: layers,
+      target: 'map',
+      view: view
+    });
+    map.addLayer(vectorLayer);
+
+    const typeSelect = document.getElementById('geometryType');
+    const typeInteraction = document.getElementById('interaction');
+
+    let draw = null;
+    let snap = null;
+
+    const select = new ol.interaction.Select({
+      wrapX: false,
+    });
+    const modify = new ol.interaction.Modify({
+      features: select.getFeatures(),
+    });
+
+    function addInteraction() {
+      const mode = typeInteraction.value;
+      const geomType = typeSelect.value;
+
+      if (mode === 'draw' && geomType !== 'None') {
+        draw = new ol.interaction.Draw({
+          source: source,
+          type: geomType,
+        });
+        map.addInteraction(draw);
+        snap = new ol.interaction.Snap({
+          source: source,
+        });
+        map.addInteraction(snap);
+      } else if (mode === 'modify') {
+        if (!map.getInteractions().getArray().includes(select)) {
+          map.addInteraction(select);
+        }
+        if (!map.getInteractions().getArray().includes(modify)) {
+          map.addInteraction(modify);
+        }
+        if (snap && !map.getInteractions().getArray().includes(snap)) {
+          map.addInteraction(snap);
+        }
+      } else if (mode === 'select') {
+        if (!map.getInteractions().getArray().includes(select)) {
+          map.addInteraction(select);
+        }
+      }
+    }
+    function removeAllAndAdd() {
+      if (draw) map.removeInteraction(draw);
+      if (snap) map.removeInteraction(snap);
+      map.removeInteraction(select);
+      map.removeInteraction(modify);
+      addInteraction();
+    }
+
+    typeSelect.onchange = removeAllAndAdd;
+    typeInteraction.onchange = removeAllAndAdd;
+    addInteraction();
+
+    document.getElementById('creategml').addEventListener('click', function () {
+      const allFeatures = source.getFeatures();
+      if (allFeatures.length === 0) {
+        alert('没有要素可生成GML，请先绘制要素');
+        return;
+      }
+
+      const selectedFeatures = select.getFeatures().getArray();
+      if (selectedFeatures.length === 0) {
+        alert('请先选中一个要素（使用选择模式点击要素）');
+        return;
+      }
+
+      const feature = selectedFeatures[0];
+      feature.set('transaction', 'update');
+      feature.setId('update.000001');
+
+      const wfstSerializer = new ol.format.WFS();
+      const featObject = wfstSerializer.writeTransaction(null, [feature], null, {
+        featureNS: 'http://geoserver/mapgis',
+        featurePrefix: 'mapgis',
+        featureType: 'mapgis:v6_time_pref_pgn_utf_wgs84_geoserver',
+        srsName: 'EPSG:3857',
+      });
+      const serializer = new XMLSerializer();
+      const featString = serializer.serializeToString(featObject);
+      console.log('GML:', featString);
+
+      const wkt = new ol.format.WKT();
+      const wktstr = wkt.writeGeometry(feature.getGeometry());
+      console.log('WKT:', wktstr);
+
+      alert('GML 已生成，请在控制台查看（F12 → Console）');
+    });
+  </script>
+</body>
+
+</html>
