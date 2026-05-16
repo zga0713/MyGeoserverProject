@@ -4,312 +4,207 @@
 <head>
   <meta charset="UTF-8">
   <title>openlayer矢量要素渲染查询</title>
-
-  <!-- OpenLayers 核心样式库 -->
   <link rel="stylesheet" href="ol/ol.css">
-  <!-- OpenLayers 核心 JS 库 -->
+  <link rel="stylesheet" href="ol/datav-style.css">
   <script src="ol/ol.js"></script>
-  <!-- jQuery 库（用于简化 DOM 操作和 Ajax 请求） -->
   <script src="jquery-1.7.2.js"></script>
-
   <style type="text/css">
-    /* 让 #map、html、body 铺满整个视口，实现地图全屏显示 */
-    #map,
-    html,
-    body {
-      height: 100%;
+    #map {
       width: 100%;
-    }
-
-    .content {
-      width: 100px;
+      height: 100%;
     }
   </style>
 </head>
 
 <body>
-  <!-- 地图容器 div，OpenLayers 会将地图渲染到这个元素中 -->
-  <div id="map"></div>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">矢量要素查询</span>
+      <span class="datav-navbar-subtitle">WMS GetFeatureInfo</span>
+    </nav>
 
-  <!-- 属性查询结果表格 -->
-  <div id="attributetable">
-    <table>
-      <thead>
-        <tr>
-          <th>name_py</th><!-- 拼音名称 -->
-          <th>name_ch</th><!-- 简体中文名称 -->
-        </tr>
-      </thead>
-      <tbody id="attributetbody">
-        <!-- 点击地图后，查询结果会动态追加到这里 -->
-      </tbody>
-    </table>
+    <div class="datav-main">
+      <div class="datav-map-area">
+        <div id="map"></div>
+      </div>
+
+      <aside class="datav-panel">
+        <div class="datav-card">
+          <div class="datav-card-title">查询结果</div>
+          <div id="attributetable">
+            <table class="datav-table">
+              <thead>
+                <tr>
+                  <th>name_py</th>
+                  <th>name_ch</th>
+                </tr>
+              </thead>
+              <tbody id="attributetbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：GeoServer WMS 服务 · 底图：高德地图
+    </footer>
   </div>
 </body>
 
 <script type="text/javascript">
-  // ============================================================
-  // 1. 基础配置
-  // ============================================================
-
-  // GeoServer 基础 URL，线上线下环境不同时只需改这里
   const baseurl = 'http://localhost:8084/';
 
-  // ============================================================
-  // 2. 创建地图 View（视图）
-  // ============================================================
-
-  // OpenLayers 默认使用 EPSG:3857（Web 墨卡托投影）
   const view = new ol.View({
-    // 将经纬度坐标从 EPSG:4326 转换为 EPSG:3857
     center: ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857'),
-    zoom: 9 // 初始缩放级别
+    zoom: 9
   });
 
-  // ============================================================
-  // 3. 创建图层数组
-  // ============================================================
-
   const layers = [
-
-    // ---- 3.1 腾讯地图瓦片底图 ----
     new ol.layer.Tile({
       source: new ol.source.XYZ({
-        // 腾讯地图实时渲染瓦片服务
-        // {0-3} 随机子域名（负载均衡），{-y} Y 轴取反适配腾讯坐标系
-        url: "http://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0"
+        url: "https://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
       })
     }),
-
-    // ---- 3.2 GeoServer 发布的 WMS 矢量面图层 ----
-    // 点击地图时可从此图层查询要素属性
     new ol.layer.Image({
       source: new ol.source.ImageWMS({
         ratio: 1,
-        // WMS 服务地址，可通过 GeoServer 的 Layer Preview 中 OpenLayers 页面获取
         url: 'http://localhost:8084/geoserver/wms?',
         params: {
-          'SERVICE': 'WMS',           // Web Map Service
-          'VERSION': '1.1.0',          // WMS 协议版本
-          'REQUEST': 'GetMap',         // 请求地图图片
-          'FORMAT': 'image/png',       // PNG 格式支持透明背景
-          'TRANSPARENT': true,         // 背景透明，让底图透出来
-          'tiled': true,               // 允许 GeoServer 按瓦片方式处理
-          'LAYERS': 'mapgis:v6_time_pref_pgn_utf_wgs84_geoserver', // 工作空间:图层名
-          'exceptions': 'application/vnd.ogc.se_inimage', // 异常时返回图片
-          'singleTile': true           // 每次请求整张图（非切片模式）
+          'SERVICE': 'WMS',
+          'VERSION': '1.1.0',
+          'REQUEST': 'GetMap',
+          'FORMAT': 'image/png',
+          'TRANSPARENT': true,
+          'tiled': true,
+          'LAYERS': 'mapgis:v6_time_pref_pgn_utf_wgs84_geoserver',
+          'exceptions': 'application/vnd.ogc.se_inimage',
+          'singleTile': true
         }
       }),
     }),
   ];
 
-  // ============================================================
-  // 4. 初始化地图
-  // ============================================================
-
   const map = new ol.Map({
-    target: 'map',   // 地图挂载的 DOM 元素 id
-    layers: layers,  // 图层数组（底图 + WMS 叠加层）
-    view: view       // 地图视图
+    target: 'map',
+    layers: layers,
+    view: view
   });
 
-  // ============================================================
-  // 5. 地图点击事件 —— WMS GetFeatureInfo 查询
-  // ============================================================
+  let resultVectorLayer = null;
 
-  // 使用 jQuery 绑定地图 div 的点击事件
   $("#map").click(function (e) {
-
-    // ---- 5.1 获取点击位置的坐标 ----
-    // 获取点击位置在 EPSG:3857 下的坐标
     const t3857 = map.getEventCoordinate(e);
     console.log('3857坐标:', t3857);
-    // 转换为 EPSG:4326 经纬度坐标（便于理解）
-    t4326 = ol.proj.transform(t3857, 'EPSG:3857', 'EPSG:4326');
+    const t4326 = ol.proj.transform(t3857, 'EPSG:3857', 'EPSG:4326');
     console.log('4326坐标:', t4326);
 
-    // ---- 5.2 构造 WMS GetFeatureInfo 请求 URL ----
-    // GetFeatureInfo 是 WMS 标准操作，用于查询指定位置的要素属性
-    // BBOX 构造一个以点击点为中心、2m×2m 的小矩形作为查询范围
-    // 坐标系写成 3857，GeoServer 会自动进行坐标转换
+    const bboxSize = 100;
+    const width = 101;
+    const height = 101;
+
     const url3857 = baseurl
       + 'geoserver/wms?'
       + 'SERVICE=WMS'
       + '&VERSION=1.1.1'
-      + '&REQUEST=GetFeatureInfo'          // 请求类型：要素信息查询
+      + '&REQUEST=GetFeatureInfo'
       + '&FORMAT=image%2Fpng'
       + '&TRANSPARENT=true'
-      + '&QUERY_LAYERS=mapgis%3Av6_time_pref_pgn_utf_wgs84_geoserver'  // 查询的图层
-      + '&LAYERS=mapgis%3Av6_time_pref_pgn_utf_wgs84_geoserver'        // 显示的图层（通常同 QUERY_LAYERS）
+      + '&QUERY_LAYERS=mapgis%3Av6_time_pref_pgn_utf_wgs84_geoserver'
+      + '&LAYERS=mapgis%3Av6_time_pref_pgn_utf_wgs84_geoserver'
       + '&exceptions=application%2Fvnd.ogc.se_inimage'
-      + '&INFO_FORMAT=application/json'    // 返回格式为 GeoJSON
-      + '&FEATURE_COUNT=50'               // 最多返回 50 个要素
-      + '&X=50&Y=50'                      // 点击点在图片中的像素坐标（配合 WIDTH/HEIGHT 使用）
-      + '&SRS=EPSG%3A3857'               // 坐标系
+      + '&INFO_FORMAT=application/json'
+      + '&FEATURE_COUNT=50'
+      + '&X=50&Y=50'
+      + '&SRS=EPSG%3A3857'
       + '&STYLES='
-      + '&WIDTH=101&HEIGHT=101'           // 请求图片的像素尺寸
+      + '&WIDTH=' + width.toString() + '&HEIGHT=' + height.toString()
       + '&BBOX='
-      + (t3857[0] - 1).toString() + '%2C'  // minx
-      + (t3857[1] - 1).toString() + '%2C'  // miny
-      + (t3857[0] + 1).toString() + '%2C'  // maxx
-      + (t3857[1] + 1).toString();         // maxy
+      + (t3857[0] - bboxSize).toString() + '%2C'
+      + (t3857[1] - bboxSize).toString() + '%2C'
+      + (t3857[0] + bboxSize).toString() + '%2C'
+      + (t3857[1] + bboxSize).toString();
     console.log('WMS请求URL:', url3857);
 
-    // ---- 5.3 发送 Ajax 请求 ----
     $.ajax(
       {
         url: url3857,
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-          // ========== 请求成功回调 ==========
+          if (!data['features'] || data['features'].length === 0) {
+            alert('该位置没有查询到要素');
+            return;
+          }
 
-          // 将 GeoJSON 数据解析为 OpenLayers Feature 数组
-          features = (new ol.format.GeoJSON()).readFeatures(data);
+          if (resultVectorLayer) {
+            map.removeLayer(resultVectorLayer);
+          }
 
-          // 创建矢量数据源，装载查询到的要素
+          const features = (new ol.format.GeoJSON()).readFeatures(data);
+
           const vectorSource = new ol.source.Vector({
             features: features
           });
 
-          // 创建矢量图层，应用高亮样式
-          const vectorLayer = new ol.layer.Vector({
+          resultVectorLayer = new ol.layer.Vector({
             source: vectorSource,
-            style: polygonStyleFunction  // 使用动态样式函数（根据要素属性渲染）
+            style: polygonStyleFunction
           });
 
-          // 将高亮图层添加到地图（叠加在原有图层之上）
-          map.addLayer(vectorLayer);
+          map.addLayer(resultVectorLayer);
 
-          // ========== 更新属性查询表格 ==========
-          // 清空旧数据
           $("#attributetbody").empty();
-          // 遍历每个查询到的要素，提取属性并填充表格
           for (let i = 0; i < data['features'].length; i++) {
             const properties = data['features'][i]['properties'];
-            const name_py = properties['name_py'];  // 拼音名称
-            const name_ch = properties['name_ch'];  // 简体中文名称
+            const name_py = properties['name_py'] || '';
+            const name_ch = properties['name_ch'] || '';
             const tabletxt = '<tr><td>'
               + name_py + '</td><td>'
               + name_ch + '</td></tr>';
-            // 将表格行追加到 tbody 中
             $("#attributetbody").append(tabletxt);
           }
         },
         error: function (data) {
-          // ========== 请求失败回调 ==========
           console.log('请求失败');
           console.log(data);
+          alert('查询要素失败，请确认GeoServer服务是否正常运行');
         }
       }
     );
   });
 
-  // ============================================================
-  // 6. 矢量要素样式函数
-  // ============================================================
-
-  // 由于每个要素的属性不同（如 name_ch），样式需动态生成
-  // 因此定义为函数而非静态对象，OpenLayers 会为每个要素调用此函数
   function polygonStyleFunction(feature) {
     return new ol.style.Style({
-      // 面边界样式：红色实线，宽度 2px
       stroke: new ol.style.Stroke({
-        color: 'rgba(192, 0, 0, 1)',
+        color: 'rgba(22, 119, 255, 0.8)',
         width: 2
       }),
-      // 面填充样式：浅灰色半透明
       fill: new ol.style.Fill({
-        color: 'rgba(192, 192, 192, 0.5)'
+        color: 'rgba(22, 119, 255, 0.15)'
       }),
-      // 文字注记样式（由 createTextStyle 函数生成）
       text: createTextStyle(feature)
     });
   };
 
-  // 创建文字注记
   function createTextStyle(feature) {
     return new ol.style.Text({
-      font: '20px Microsoft YaHei',     // 字体：微软雅黑 20px
-      text: getText(feature),            // 从要素属性中获取文本内容
+      font: '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      text: getText(feature),
       fill: new ol.style.Fill({
-        color: 'rgba(192, 0, 0, 1)'      // 文字颜色：红色
+        color: 'rgba(22, 119, 255, 1)'
       }),
       stroke: new ol.style.Stroke({
-        color: 'rgba(255, 255, 255, 1)', // 白色描边（文字光晕，提高可读性）
+        color: 'rgba(255, 255, 255, 1)',
         width: 1
       }),
     })
   };
 
-  // 从要素属性中提取注记文本
   function getText(feature) {
-    return feature.get('name_ch').toString();  // 返回简体中文名称
+    return feature.get('name_ch').toString();
   };
 </script>
-
-<style type="text/css">
-  /* 全局重置：去掉所有元素的默认外边距和内边距 */
-  * {
-    margin: 0px;
-    padding: 0px;
-  }
-
-  /* 地图及相关元素占满整个视口 */
-  body,
-  button,
-  input,
-  select,
-  #map {
-    width: 100%;
-    height: 100%;
-  }
-
-  /* 属性表格容器：位于地图下方，占 5% 高度 */
-  #attributetable {
-    width: 100%;
-    height: 5%;
-    margin: 10px;
-  }
-
-  /* 表格基础样式 */
-  table {
-    border-collapse: collapse;
-    /* 合并边框 */
-    border-spacing: 0;
-    border: 1px solid #c0c0c0;
-  }
-
-  /* 表头/单元格：统一边框和内边距 */
-  th,
-  td {
-    border: 1px solid #d0d0d0;
-    color: #404060;
-    padding: 10px;
-  }
-
-  /* 表头样式：深红色背景，白色加粗文字 */
-  th {
-    background-color: #C00000;
-    font: bold 16px "微软雅黑";
-    color: #fff;
-  }
-
-  /* 单元格文字样式 */
-  td {
-    font: 14px "微软雅黑";
-  }
-
-  /* 表格行默认背景色 */
-  tbody tr {
-    background-color: #f0f0f0;
-  }
-
-  /* 鼠标悬停行时高亮 */
-  tbody tr:hover {
-    cursor: pointer;
-    background-color: #fafafa;
-  }
-</style>
 
 </html>

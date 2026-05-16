@@ -5,74 +5,67 @@
   <meta charset="UTF-8">
   <title>openlayer修改要素</title>
   <link href="ol/ol.css" rel="stylesheet" />
+  <link href="ol/datav-style.css" rel="stylesheet" />
   <script src="ol/ol.js"></script>
   <style type="text/css">
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    #map,
-    html,
-    body {
-      height: 100%;
+    #map {
       width: 100%;
-    }
-
-    form.form-inline {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px 16px;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      font-family: "Microsoft YaHei", sans-serif;
-      font-size: 14px;
-    }
-
-    form.form-inline select {
-      margin-left: 8px;
-      padding: 4px 8px;
-      font-size: 14px;
-      border: 1px solid #c0c0c0;
-      border-radius: 3px;
-    }
-
-    form.form-inline label {
-      margin-right: 4px;
-    }
-
-    form.form-inline label+label {
-      margin-left: 12px;
+      height: 100%;
     }
   </style>
 </head>
 
 <body>
-  <div id="map"></div>
-  <form class="form-inline">
-    <label>操作方式</label>
-    <select id="interaction">
-      <option value="draw">绘制</option>
-      <option value="modify">修改</option>
-      <option value="select">选择</option>
-    </select>
-    <label>几何类型</label>
-    <select id="geometryType">
-      <option value="None">无</option>
-      <option value="Point">点</option>
-      <option value="LineString">线</option>
-      <option value="Polygon">面</option>
-      <option value="Circle">圆</option>
-    </select>
-  </form>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">要素编辑</span>
+      <span class="datav-navbar-subtitle">绘制 / 修改 / 选择</span>
+    </nav>
+
+    <div class="datav-main">
+      <div class="datav-map-area">
+        <div id="map"></div>
+        <div class="datav-map-overlay">
+          <label class="datav-form-label" for="interaction" style="margin-bottom:0;white-space:nowrap;">操作方式</label>
+          <select id="interaction" class="datav-select" style="width:auto;">
+            <option value="draw">绘制</option>
+            <option value="modify">修改</option>
+            <option value="select">选择</option>
+          </select>
+          <label class="datav-form-label" for="geometryType" style="margin-bottom:0;white-space:nowrap;">几何类型</label>
+          <select id="geometryType" class="datav-select" style="width:auto;">
+            <option value="None">无</option>
+            <option value="Point">点</option>
+            <option value="LineString">线</option>
+            <option value="Polygon">面</option>
+            <option value="Circle">圆</option>
+          </select>
+        </div>
+      </div>
+
+      <aside class="datav-panel">
+        <div class="datav-card">
+          <div class="datav-card-title">操作说明</div>
+          <div class="datav-card-body">
+            <p style="margin-bottom:8px;">选择操作方式和几何类型后，在地图上进行操作：</p>
+            <p style="color:var(--text-helper);font-size:12px;margin-bottom:4px;">绘制 — 在地图上单击绘制几何要素</p>
+            <p style="color:var(--text-helper);font-size:12px;margin-bottom:4px;">修改 — 拖拽要素顶点进行编辑</p>
+            <p style="color:var(--text-helper);font-size:12px;">选择 — 点击要素进行选中</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：OpenLayers 交互编辑 · 底图：高德地图
+    </footer>
+  </div>
+
   <script>
     const layers = [
       new ol.layer.Tile({
         source: new ol.source.XYZ({
-          url: 'https://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0',
+          url: 'https://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
         })
       })
     ];

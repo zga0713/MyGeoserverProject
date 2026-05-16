@@ -55,7 +55,9 @@ def getfeature(request):
         '&exceptions=application%2Fvnd.ogc.se_inimage&INFO_FORMAT=application/json&FEATURE_COUNT=50&X=50&Y=50'+\
         '&SRS=EPSG%3A4326&STYLES=&WIDTH=101&HEIGHT=101&BBOX='+request.GET['BBOX']
     json_data=requests.get(url=url)
-    return HttpResponse(json_data.content,content_type='application/json')
+    if json_data.status_code != 200:
+        return HttpResponse(json_data.content, content_type='text/plain', status=json_data.status_code)
+    return HttpResponse(json_data.content, content_type='application/json')
 
 
 # WFS 代理：前端通过 Django 转发到 GeoServer，避免 CORS 问题

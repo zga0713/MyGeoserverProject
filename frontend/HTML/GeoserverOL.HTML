@@ -5,147 +5,80 @@
   <meta charset="UTF-8">
   <title>openlayer与geoserver交互</title>
   <link rel="stylesheet" href="ol/ol.css">
+  <link rel="stylesheet" href="ol/datav-style.css">
   <script src="ol/ol.js"></script>
   <script src="jquery-1.7.2.js"></script>
   <style type="text/css">
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    #map,
-    html,
-    body {
+    #map {
+      width: 100%;
       height: 100%;
-      width: 100%;
-    }
-
-    form.form-inline {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px 16px;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      font-family: "Microsoft YaHei", sans-serif;
-      font-size: 14px;
-    }
-
-    form.form-inline select,
-    form.form-inline input[type="button"] {
-      margin-left: 4px;
-      padding: 4px 8px;
-      font-size: 14px;
-      border: 1px solid #c0c0c0;
-      border-radius: 3px;
-    }
-
-    form.form-inline label {
-      margin-right: 4px;
-    }
-
-    form.form-inline input[type="button"] {
-      background: #C00000;
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    form.form-inline input[type="button"]:hover {
-      background: #a00000;
-    }
-
-    #attributetable {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      z-index: 1000;
-      max-height: 150px;
-      overflow-y: auto;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      border-spacing: 0;
-      border: 1px solid #c0c0c0;
-    }
-
-    th,
-    td {
-      border: 1px solid #d0d0d0;
-      color: #404060;
-      padding: 8px;
-    }
-
-    th {
-      background-color: #C00000;
-      font: bold 14px "微软雅黑";
-      color: #fff;
-    }
-
-    td {
-      font: 13px "微软雅黑";
-    }
-
-    td input {
-      width: 90%;
-      padding: 2px 4px;
-      font: 13px "微软雅黑";
-      border: 1px solid #d0d0d0;
-      border-radius: 2px;
-    }
-
-    tbody tr {
-      background-color: #f0f0f0;
-    }
-
-    tbody tr:hover {
-      cursor: pointer;
-      background-color: #fafafa;
     }
   </style>
 </head>
 
 <body>
-  <form class="form-inline">
-    <label>操作方式</label>
-    <select id="interaction">
-      <option value="search">查看</option>
-      <option value="insert">增加</option>
-      <option value="modify">修改</option>
-      <option value="delete">删除</option>
-    </select>
-    <label>操作对象后</label>
-    <input type="button" id="creategml" value="提交" />
-  </form>
-  <div id="map"></div>
-  <div id="attributetable">
-    <table>
-      <thead>
-        <tr>
-          <th>fid</th>
-          <th>name_py</th>
-          <th>name_ch</th>
-        </tr>
-      </thead>
-      <tbody id="attributetbody">
-      </tbody>
-    </table>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">WebGIS 要素编辑器</span>
+      <span class="datav-navbar-subtitle">OpenLayers + GeoServer</span>
+    </nav>
+
+    <div class="datav-main">
+      <div class="datav-map-area">
+        <div id="map"></div>
+      </div>
+
+      <aside class="datav-panel">
+        <div class="datav-card">
+          <div class="datav-card-title">操作控制</div>
+          <div class="datav-card-body">
+            <form id="operationForm">
+              <div class="datav-form-group">
+                <label class="datav-form-label" for="interaction">操作方式</label>
+                <select id="interaction" class="datav-select">
+                  <option value="search">查看</option>
+                  <option value="insert">增加</option>
+                  <option value="modify">修改</option>
+                  <option value="delete">删除</option>
+                </select>
+              </div>
+              <div class="datav-form-group">
+                <button type="button" id="creategml" class="datav-btn datav-btn-block">提交</button>
+              </div>
+            </form>
+            <div class="datav-info-bar">
+              操作对象后点击提交
+            </div>
+          </div>
+        </div>
+
+        <div class="datav-card">
+          <div class="datav-card-title">属性表</div>
+          <div id="attributetable">
+            <table class="datav-table">
+              <thead>
+                <tr>
+                  <th>fid</th>
+                  <th>name_py</th>
+                  <th>name_ch</th>
+                </tr>
+              </thead>
+              <tbody id="attributetbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：GeoServer WFS-T 服务 · 底图：腾讯地图
+    </footer>
   </div>
 </body>
 <script type="text/javascript">
   const baseurl = 'http://localhost:8084/';
   const proj4326 = ol.proj.get('EPSG:4326');
-  console.log(proj4326.getAxisOrientation());
   const proj = new ol.proj.Projection({
     code: 'EPSG:4326',
     axisOrientation: 'enu',
@@ -156,8 +89,6 @@
     worldExtent: proj4326.getWorldExtent(),
   });
   ol.proj.addProjection(proj);
-  const proj4326new = ol.proj.get('EPSG:4326');
-  console.log(proj4326new);
   const view = new ol.View({
     center: [116.400146, 40.250184],
     zoom: 9,
@@ -346,6 +277,7 @@
             alert('该位置没有查询到要素');
             return;
           }
+          source.clear();
           const features = (new ol.format.GeoJSON()).readFeatures(data);
           source.addFeature(features[0]);
           $("#attributetbody").empty();
@@ -362,6 +294,7 @@
         error: function (data) {
           console.log('查询失败');
           console.log(data);
+          alert('查询要素失败，请查看控制台信息');
         }
       }
     );
@@ -370,11 +303,11 @@
   function polygonStyleFunction(feature) {
     return new ol.style.Style({
       stroke: new ol.style.Stroke({
-        color: 'rgba(192, 0, 0, 1)',
+        color: 'rgba(22, 119, 255, 0.8)',
         width: 2
       }),
       fill: new ol.style.Fill({
-        color: 'rgba(192, 192, 192, 0.5)'
+        color: 'rgba(22, 119, 255, 0.15)'
       }),
       text: createTextStyle(feature)
     });
@@ -382,12 +315,12 @@
 
   function createTextStyle(feature) {
     return new ol.style.Text({
-      font: '20px Microsoft YaHei',
+      font: '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       text: getText(feature),
       fill: new ol.style.Fill({
-        color: 'rgba(192, 0, 0, 1)'
+        color: 'rgba(22, 119, 255, 1)'
       }),
-      stroke: new ol.style.Stroke({ color: 'rgba(255, 255, 255, 1)', width: 1 }),
+      stroke: new ol.style.Stroke({ color: 'rgba(255, 255, 255, 1)', width: 2 }),
     })
   };
 
@@ -395,7 +328,7 @@
     if (feature.get('name_ch')) {
       return feature.get('name_ch').toString();
     } else {
-      return 'tool';
+      return '';
     }
   };
 </script>

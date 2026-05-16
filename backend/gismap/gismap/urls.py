@@ -1,7 +1,9 @@
+from django.contrib import admin
 from django.urls import path
 from . import geoserver
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('get/', geoserver.get, name='get'),
     path('gethtml/', geoserver.gethtml, name='gethtml'),
     path('posthtml/', geoserver.posthtml, name='posthtml'),

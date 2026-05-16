@@ -5,90 +5,68 @@
   <meta charset="UTF-8">
   <title>openlayer生成GML</title>
   <link href="ol/ol.css" rel="stylesheet" />
+  <link href="ol/datav-style.css" rel="stylesheet" />
   <script src="ol/ol.js"></script>
   <style type="text/css">
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    #map,
-    html,
-    body {
-      height: 100%;
+    #map {
       width: 100%;
-    }
-
-    form.form-inline {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px 16px;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      font-family: "Microsoft YaHei", sans-serif;
-      font-size: 14px;
-    }
-
-    form.form-inline select,
-    form.form-inline input[type="button"] {
-      margin-left: 4px;
-      padding: 4px 8px;
-      font-size: 14px;
-      border: 1px solid #c0c0c0;
-      border-radius: 3px;
-    }
-
-    form.form-inline label {
-      margin-right: 4px;
-    }
-
-    form.form-inline label+label {
-      margin-left: 12px;
-    }
-
-    form.form-inline input[type="button"] {
-      background: #C00000;
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    form.form-inline input[type="button"]:hover {
-      background: #a00000;
+      height: 100%;
     }
   </style>
 </head>
 
 <body>
-  <div id="map"></div>
-  <form class="form-inline">
-    <label>操作方式</label>
-    <select id="interaction">
-      <option value="draw">draw</option>
-      <option value="select">select</option>
-      <option value="modify">modify</option>
-    </select>
-    <label>几何类型</label>
-    <select id="geometryType">
-      <option value="Point">Point</option>
-      <option value="LineString">LineString</option>
-      <option value="Polygon">Polygon</option>
-      <option value="Circle">Circle</option>
-      <option value="None">None</option>
-    </select>
-    <label>选中要素后</label>
-    <input type="button" id="creategml" value="生成GML" />
-  </form>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">GML 生成器</span>
+      <span class="datav-navbar-subtitle">OpenLayers WFS-T</span>
+    </nav>
+
+    <div class="datav-main">
+      <div class="datav-map-area">
+        <div id="map"></div>
+        <div class="datav-map-overlay">
+          <label class="datav-form-label" for="interaction" style="margin-bottom:0;white-space:nowrap;">操作方式</label>
+          <select id="interaction" class="datav-select" style="width:auto;">
+            <option value="draw">draw</option>
+            <option value="select">select</option>
+            <option value="modify">modify</option>
+          </select>
+          <label class="datav-form-label" for="geometryType" style="margin-bottom:0;white-space:nowrap;">几何类型</label>
+          <select id="geometryType" class="datav-select" style="width:auto;">
+            <option value="Point">Point</option>
+            <option value="LineString">LineString</option>
+            <option value="Polygon">Polygon</option>
+            <option value="Circle">Circle</option>
+            <option value="None">None</option>
+          </select>
+          <button type="button" id="creategml" class="datav-btn datav-btn-sm">生成GML</button>
+        </div>
+      </div>
+
+      <aside class="datav-panel">
+        <div class="datav-card">
+          <div class="datav-card-title">操作说明</div>
+          <div class="datav-card-body">
+            <p style="color:var(--text-helper);font-size:12px;margin-bottom:4px;">1. 选择 draw 模式绘制要素</p>
+            <p style="color:var(--text-helper);font-size:12px;margin-bottom:4px;">2. 切换到 select 模式选中要素</p>
+            <p style="color:var(--text-helper);font-size:12px;margin-bottom:4px;">3. 点击"生成GML"按钮</p>
+            <p style="color:var(--text-helper);font-size:12px;">4. 在控制台（F12）查看生成的 GML</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：OpenLayers GML 生成 · 底图：高德地图
+    </footer>
+  </div>
+
   <script>
     const layers = [
       new ol.layer.Tile({
         source: new ol.source.XYZ({
-          url: "http://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0"
+          url: "https://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
         })
       })
     ];

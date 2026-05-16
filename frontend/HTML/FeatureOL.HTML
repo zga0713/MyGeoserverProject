@@ -4,128 +4,95 @@
 <head>
   <meta charset="UTF-8">
   <title>openlayers渲染矢量要素</title>
-
-  <!-- OpenLayers 核心样式库 -->
   <link rel="stylesheet" href="ol/ol.css">
-  <!-- OpenLayers 核心 JS 库 -->
+  <link rel="stylesheet" href="ol/datav-style.css">
   <script src="ol/ol.js"></script>
-  <!-- jQuery 库（用于可能后续的 DOM 操作或 Ajax 请求） -->
   <script src="jQuery-1.7.2.js"></script>
-
   <style type="text/css">
-    /* 全局重置：去掉所有元素的默认外边距和内边距 */
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    /* 地图容器占满全屏 */
-    html,
-    body {
-      height: 100%;
-      width: 100%;
-    }
-
     #map {
-      height: 100%;
       width: 100%;
-    }
-
-    .container {
-      width: 100px;
+      height: 100%;
     }
   </style>
 </head>
 
 <body>
-  <!-- 地图容器 div，OpenLayers 会将地图渲染到这个元素中 -->
-  <div id="map"></div>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">矢量要素渲染</span>
+      <span class="datav-navbar-subtitle">点 / 线 / 面 示例</span>
+    </nav>
+
+    <div class="datav-main" style="flex: 1;">
+      <div class="datav-map-area" style="flex: 1 1 100%;">
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：OpenLayers 矢量要素 · 底图：高德地图
+    </footer>
+  </div>
 
   <script type="text/javascript">
-    // ============================================================
-    // 1. 创建地图 View（视图）
-    // ============================================================
     const view = new ol.View({
-      // 地图中心点坐标：先将经纬度（EPSG:4326）转换为 Web 墨卡托（EPSG:3857）
       center: ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857'),
-      zoom: 9 // 初始缩放级别（数值越大，比例尺越大，地图越精细）
+      zoom: 9
     });
 
-    // ============================================================
-    // 2. 创建底图图层
-    // ============================================================
     const layers = [
-      // ---- 2.1 腾讯地图瓦片底图 ----
-      // 腾讯瓦片是普通的 XYZ 瓦片，应使用 ol.source.XYZ。
       new ol.layer.Tile({
         source: new ol.source.XYZ({
-          url: 'https://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0',
+          url: 'https://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
         })
       })
     ];
 
-    // ============================================================
-    // 3. 初始化地图
-    // ============================================================
     const map = new ol.Map({
-      target: 'map',   // 地图挂载的 DOM 元素 id
-      view: view,      // 地图视图（中心点 + 缩放级别）
-      layers: layers   // 图层数组
+      target: 'map',
+      view: view,
+      layers: layers
     });
 
-    // ============================================================
-    // 4. 定义矢量要素的渲染样式
-    // ============================================================
     const style = new ol.style.Style({
-      // 点样式：圆形
       image: new ol.style.Circle({
         fill: new ol.style.Fill({
-          color: 'rgba(192, 192, 192, 0.5)'  // 浅灰色半透明填充
+          color: 'rgba(22, 119, 255, 0.15)'
         }),
         stroke: new ol.style.Stroke({
-          color: 'rgba(192, 0, 0, 1)',        // 红色描边
-          width: 2                              // 描边宽度 2px
+          color: 'rgba(22, 119, 255, 0.8)',
+          width: 2
         }),
-        radius: 10,  // 圆的半径 10px
+        radius: 10,
       }),
-      // 线样式：红色实线，宽度 2px
       stroke: new ol.style.Stroke({
-        color: 'rgba(192, 0, 0, 1)',
+        color: 'rgba(22, 119, 255, 0.8)',
         width: 2
       }),
-      // 面样式：浅灰色半透明填充
       fill: new ol.style.Fill({
-        color: 'rgba(192, 192, 192, 0.5)'
+        color: 'rgba(22, 119, 255, 0.15)'
       }),
-      // 注记样式
       text: new ol.style.Text({
-        text: '测试注记',                     // 固定文本内容（未来可从要素属性中读取）
-        font: '20px "Microsoft YaHei"',        // 微软雅黑 20px
-        offsetY: 20,                           // 注记在 Y 轴上的偏移量（向下 20px）
-        offsetX: 20,                           // 注记在 X 轴上的偏移量（向右 20px）
+        text: '测试注记',
+        font: '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        offsetY: 20,
+        offsetX: 20,
         fill: new ol.style.Fill({
-          color: 'rgba(192, 0, 0, 1)'          // 注记文字颜色：红色
+          color: 'rgba(22, 119, 255, 1)'
         }),
         stroke: new ol.style.Stroke({
-          color: 'rgba(255, 255, 255, 1)',     // 白色描边（文字光晕效果）
+          color: 'rgba(255, 255, 255, 1)',
           width: 1
         }),
       })
     });
 
-    // ============================================================
-    // 5. 创建矢量要素（点、线、面）
-    // ============================================================
-
-    // ---- 5.1 创建点要素 ----
     const point = new ol.Feature(
       new ol.geom.Point(
         ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857')
       )
     );
 
-    // ---- 5.2 创建线要素 ----
-    // 需要至少两个坐标点来定义一条线
     const line = new ol.Feature(
       new ol.geom.LineString([
         ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857'),
@@ -133,33 +100,24 @@
       ])
     );
 
-    // ---- 5.3 创建面要素 ----
-    // Polygon 需要至少 3 个点，且首尾点必须相同以闭合
     const polygon = new ol.Feature(
       new ol.geom.Polygon([[
         ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857'),
         ol.proj.transform([116.400146, 41.250184], 'EPSG:4326', 'EPSG:3857'),
         ol.proj.transform([117.400146, 41.250184], 'EPSG:4326', 'EPSG:3857'),
-        ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857') // 闭合点
+        ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857')
       ]])
     );
 
-    // ============================================================
-    // 6. 创建矢量图层并添加到地图
-    // ============================================================
-
-    // 创建矢量数据源，将所有要素放入
     const vectorSource = new ol.source.Vector({
       features: [point, line, polygon]
     });
 
-    // 创建矢量图层，关联数据源和样式
     const vectorLayer = new ol.layer.Vector({
       source: vectorSource,
       style: style
     });
 
-    // 将矢量图层添加到地图（叠加在底图之上）
     map.addLayer(vectorLayer);
   </script>
 

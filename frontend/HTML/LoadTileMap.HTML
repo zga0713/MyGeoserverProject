@@ -4,102 +4,70 @@
 <head>
   <meta charset="UTF-8">
   <title>瓦片地图展示</title>
-
-  <!-- OpenLayers 核心样式库 -->
   <link rel="stylesheet" href="ol/ol.css">
-  <!-- OpenLayers 核心 JS 库 -->
+  <link rel="stylesheet" href="ol/datav-style.css">
   <script src="ol/ol.js"></script>
-  <!-- jQuery 库（用于可能后续的 DOM 操作或 Ajax 请求） -->
   <script src="jQuery-1.7.2.js"></script>
-
   <style type="text/css">
-    /* 全局重置：去掉所有元素的默认外边距和内边距 */
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    /* 地图容器占满全屏 */
-    html,
-    body {
-      height: 100%;
-      width: 100%;
-    }
-
     #map {
-      height: 100%;
       width: 100%;
-    }
-
-    .container {
-      width: 100px;
+      height: 100%;
     }
   </style>
 </head>
 
 <body>
-  <!-- 地图容器 div，OpenLayers 会将地图渲染到这个元素中 -->
-  <div id="map"></div>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">瓦片地图</span>
+      <span class="datav-navbar-subtitle">GeoServer WMS + 高德底图</span>
+    </nav>
+
+    <div class="datav-main" style="flex: 1;">
+      <div class="datav-map-area" style="flex: 1 1 100%;">
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：GeoServer WMS 服务 · 底图：高德地图
+    </footer>
+  </div>
 
   <script type="text/javascript">
-    // ============================================================
-    // 1. 创建地图 View（视图）
-    // ============================================================
     const view = new ol.View({
-      // 地图中心点坐标
-      // 先将经纬度（EPSG:4326）转换为 Web 墨卡托（EPSG:3857）
-      // 腾讯瓦片地图和 OpenLayers 默认使用的都是 EPSG:3857 投影
       center: ol.proj.transform([116.400146, 40.250184], 'EPSG:4326', 'EPSG:3857'),
-      zoom: 9 // 初始缩放级别（数值越大，比例尺越大，地图越精细）
+      zoom: 9
     });
 
-    // ============================================================
-    // 2. 创建图层数组
-    // ============================================================
     const layers = [
-
-      // ---- 2.1 腾讯地图瓦片底图（栅格瓦片） ----
       new ol.layer.Tile({
         source: new ol.source.XYZ({
-          // 腾讯地图实时渲染瓦片服务 URL
-          // {0-3} 表示随机选择一个子域名（rt0 ~ rt3），用于浏览器并发请求加速
-          // {z} 缩放级别，{x} 瓦片列号，{-y} 瓦片行号（取反以适配腾讯坐标系）
-          // type=vector&style=0 表示矢量风格
-          url: "https://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0"
+          url: "https://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
         })
       }),
-
-      // ---- 2.2 GeoServer 发布的 WMS 图层（行政区划面数据） ----
-      // 使用 ImageWMS 加载，每次请求返回一张完整图片（非切片）
-      // 数据源本身是 EPSG:4326 坐标系，GeoServer 会自动重投影适配前端的 EPSG:3857
       new ol.layer.Image({
         source: new ol.source.ImageWMS({
-          // GeoServer WMS 服务地址
-          // 注意：当前使用 8084 端口（Docker 映射），如果使用本地部署则改为 8080
           url: "http://localhost:8084/geoserver/mapgis/wms?",
           params: {
-            'SERVICE': 'WMS',          // Web Map Service 服务
-            'VERSION': '1.1.0',         // WMS 协议版本
-            'REQUEST': 'GetMap',        // 请求类型：获取地图图片
-            'FORMAT': 'image/png',      // 输出格式（PNG 支持透明背景）
-            'TRANSPARENT': 'true',      // 背景透明，让底图透出来
-            'tiled': 'true',            // 允许 GeoServer 按瓦片方式处理
-            'LAYERS': 'mapgis:v6_time_cnty_pts_utf_wgs84',  // 工作区:图层名（冒号后不要有空格/tab）
-            'exceptions': 'application/vnd.ogc.se_inimage'  // 异常时返回图片而非 XML
+            'SERVICE': 'WMS',
+            'VERSION': '1.1.0',
+            'REQUEST': 'GetMap',
+            'FORMAT': 'image/png',
+            'TRANSPARENT': 'true',
+            'tiled': 'true',
+            'LAYERS': 'mapgis:v6_time_cnty_pts_utf_wgs84',
+            'exceptions': 'application/vnd.ogc.se_inimage'
           },
-          // 不设 singleTile，让 OpenLayers 按瓦片请求（性能更好）
-          serverType: 'geoserver'       // 指定服务器类型为 GeoServer，优化请求参数
+          serverType: 'geoserver'
         })
       }),
     ];
 
-    // ============================================================
-    // 3. 初始化地图
-    // ============================================================
     const map = new ol.Map({
-      target: 'map',     // 地图挂载的 DOM 元素 id
-      layers: layers,    // 图层数组（底图 + WMS 叠加层）
-      view: view         // 地图视图（中心点 + 缩放级别）
+      target: 'map',
+      layers: layers,
+      view: view
     });
   </script>
 
