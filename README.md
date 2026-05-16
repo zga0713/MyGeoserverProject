@@ -60,6 +60,9 @@ MyGeoserverProject/
     ├── pref_pts_shptotxt.py           # 县级点(面数据) shapefile → 文本
     └── pref_pts_txttopg.py            # 县级点(面数据) 文本 → PostGIS
 ```
+## 项目截图
+<img width="3072" height="1644" alt="屏幕截图 2026-05-16 124609" src="https://github.com/user-attachments/assets/6d68747b-2721-4609-b370-2c88796cd844" />
+
 
 ## 技术栈
 
