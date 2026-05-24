@@ -25,8 +25,8 @@ GDAL/
 
 # GeoServer data & logs
 gis-infra/geoserver-data/logs/
-gis-infra/geoserver-data/gwc/diskquota_page_store_hsql/
-gis-infra/geoserver-data/gwc/geowebcache-diskquota.xml
+gis-infra/geoserver-data/gwc/
+gis-infra/geoserver-data/gwc-layers/
 gis-infra/postgis-data/
 
 # Fonts（由 Docker 挂载处理）

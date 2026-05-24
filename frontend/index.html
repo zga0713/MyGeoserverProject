@@ -9,6 +9,7 @@
     #map {
       width: 100%;
       height: 100%;
+      position: relative;
     }
   </style>
 </head>
@@ -22,7 +23,9 @@
 
     <div class="datav-main">
       <div class="datav-map-area">
-        <div id="map"></div>
+        <div id="map">
+          <div id="timeline-container"></div>
+        </div>
       </div>
 
       <aside class="datav-panel">
@@ -66,6 +69,12 @@
                 <label class="datav-radio">
                   <input type="checkbox" id="immediateMode" />
                   立即提交
+                </label>
+              </div>
+              <div class="datav-form-group">
+                <label class="datav-radio">
+                  <input type="checkbox" id="wmsToggle" />
+                  显示 WMS 参考图层
                 </label>
               </div>
               <div class="datav-form-group">

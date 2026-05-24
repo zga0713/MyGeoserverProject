@@ -52,12 +52,14 @@ export class UpdateCommand implements Command {
 
   execute(): void {
     this.feature.setGeometry(this.newGeom);
-    this.feature.setProperties(this.newProps);
+    const { geometry, ...props } = this.newProps as Record<string, unknown> & { geometry?: unknown };
+    this.feature.setProperties(props);
   }
 
   undo(): void {
     this.feature.setGeometry(this.oldGeom);
-    this.feature.setProperties(this.oldProps);
+    const { geometry, ...props } = this.oldProps as Record<string, unknown> & { geometry?: unknown };
+    this.feature.setProperties(props);
   }
 }
 

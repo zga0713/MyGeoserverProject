@@ -15,11 +15,16 @@ import Modify from 'ol/interaction/Modify';
 import Snap from 'ol/interaction/Snap';
 import WKT from 'ol/format/WKT';
 import GeoJSON from 'ol/format/GeoJSON';
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
+import Fill from 'ol/style/Fill';
 import type Geometry from 'ol/geom/Geometry';
 import type Feature from 'ol/Feature';
 import { featureStyleFunction } from './utils/style.js';
 import { InsertCommand, UpdateCommand, DeleteCommand, CommandHistory } from './history.js';
 import { sendWFSTransaction } from './utils/wfst.js';
+import { TimelineControl } from './timeline.js';
+import './timeline.css';
 
 const baseurl = 'http://localhost:8084/';
 
@@ -42,29 +47,32 @@ const view = new View({
   projection: 'EPSG:4326',
 });
 
+const wmsLayer = new ImageLayer({
+  visible: false,
+  source: new ImageWMS({
+    ratio: 1,
+    url: 'http://localhost:8084/geoserver/wms?',
+    params: {
+      'SERVICE': 'WMS',
+      'VERSION': '1.1.0',
+      'REQUEST': 'GetMap',
+      'FORMAT': 'image/png',
+      'TRANSPARENT': true,
+      'tiled': true,
+      'LAYERS': 'mapgis:v6_time_pref_pgn_utf_wgs84_geoserver',
+      'exceptions': 'application/vnd.ogc.se_inimage',
+      'singleTile': true,
+    },
+  }),
+});
+
 const layers = [
   new TileLayer({
     source: new XYZ({
       url: 'http://rt{0-3}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0',
     }),
   }),
-  new ImageLayer({
-    source: new ImageWMS({
-      ratio: 1,
-      url: 'http://localhost:8084/geoserver/wms?',
-      params: {
-        'SERVICE': 'WMS',
-        'VERSION': '1.1.0',
-        'REQUEST': 'GetMap',
-        'FORMAT': 'image/png',
-        'TRANSPARENT': true,
-        'tiled': true,
-        'LAYERS': 'mapgis:v6_time_pref_pgn_utf_wgs84_geoserver',
-        'exceptions': 'application/vnd.ogc.se_inimage',
-        'singleTile': true,
-      },
-    }),
-  }),
+  wmsLayer,
 ];
 
 const map = new Map({
@@ -81,7 +89,75 @@ const vector = new VectorLayer({
 });
 map.addLayer(vector);
 
+// Timeline WMS layer — server-rendered PNG filtered by CQL_FILTER
+function createTimelineSource(year: number): ImageWMS {
+  return new ImageWMS({
+    ratio: 1,
+    url: 'http://localhost:8084/geoserver/wms?',
+    params: {
+      'SERVICE': 'WMS',
+      'VERSION': '1.1.0',
+      'REQUEST': 'GetMap',
+      'FORMAT': 'image/png',
+      'TRANSPARENT': true,
+      'LAYERS': 'mapgis:v6_time_pref_pgn_utf_wgs84_geoserver',
+      'CQL_FILTER': `beg_yr <= ${year} AND end_yr >= ${year}`,
+    },
+  });
+}
+
+const timelineLayer = new ImageLayer({
+  source: createTimelineSource(-224),
+  opacity: 0.65,
+});
+map.addLayer(timelineLayer);
+
+function loadYearFeatures(year: number): void {
+  // Fade out
+  timelineLayer.setOpacity(0);
+
+  const newSource = createTimelineSource(year);
+  const onLoad = function () {
+    newSource.un('imageloadend', onLoad);
+    newSource.un('imageloaderror', onError);
+    animateOpacity(timelineLayer, 0, 0.65, 400);
+  };
+  const onError = function () {
+    newSource.un('imageloadend', onLoad);
+    newSource.un('imageloaderror', onError);
+    timelineLayer.setOpacity(0.65);
+  };
+  newSource.on('imageloadend', onLoad);
+  newSource.on('imageloaderror', onError);
+
+  timelineLayer.setSource(newSource);
+}
+
 // Command history for undo/redo
+
+let animCancel: (() => void) | null = null;
+
+function animateOpacity(layer: { setOpacity(o: number): void }, from: number, to: number, duration: number): void {
+  if (animCancel) animCancel();
+  let cancelled = false;
+  animCancel = () => { cancelled = true; };
+
+  const start = performance.now();
+  function tick(ts: number) {
+    if (cancelled) return;
+    const elapsed = ts - start;
+    const t = Math.min(elapsed / duration, 1);
+    // ease-out cubic
+    const eased = 1 - Math.pow(1 - t, 3);
+    layer.setOpacity(from + (to - from) * eased);
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      animCancel = null;
+    }
+  }
+  requestAnimationFrame(tick);
+}
 const history = new CommandHistory();
 
 // Interactions
@@ -157,11 +233,11 @@ function ensureDrawInteraction(): void {
   draw.on('drawend', function (e) {
     draw!.setActive(false);
     history.record(new InsertCommand(e.feature, source));
-    const tabletxt = '<tr><td>'
-      + '<input type="text" class="edit-fid" value="(自动生成)" readonly />' + '</td><td>'
-      + '<input type="text" class="edit-name_py" value="name_py" />' + '</td><td>'
-      + '<input type="text" class="edit-name_ch" value="name_ch" />' + '</td></tr>';
-    $('#attributetbody').append(tabletxt);
+    const $row = $('<tr>');
+    $row.append($('<td>').append($('<input>', { type: 'text', class: 'edit-fid', value: '(自动生成)', readonly: true })));
+    $row.append($('<td>').append($('<input>', { type: 'text', class: 'edit-name_py' })));
+    $row.append($('<td>').append($('<input>', { type: 'text', class: 'edit-name_ch' })));
+    $('#attributetbody').append($row);
   });
   map.addInteraction(draw);
   if (snapToggle.checked) {
@@ -183,6 +259,10 @@ typeInteraction.onchange = function () {
   if (typeInteraction.value === 'modify') {
     map.addInteraction(select);
     map.addInteraction(modify);
+  }
+
+  if (typeInteraction.value === 'delete') {
+    map.addInteraction(select);
   }
 };
 
@@ -213,7 +293,12 @@ $('#creategml').click(function () {
 
   // Delete mode: apply DeleteCommand before building WFS-T
   if (typeInteraction.value === 'delete') {
-    const feature = features[features.length - 1];
+    const selected = select.getFeatures().getArray();
+    if (selected.length === 0) {
+      alert('请先在删除模式下选中一个要素');
+      return;
+    }
+    const feature = selected[0];
     const fid = feature.getId();
     if (!fid) {
       alert('删除操作需要要素有 fid，请先通过查看模式查询要素');
@@ -237,12 +322,13 @@ $('#creategml').click(function () {
   }
 
   // Apply attribute table values for insert/modify
+  const rows = $('#attributetbody tr');
   if (typeInteraction.value === 'insert') {
-    const feature = features[features.length - 1];
-    const name_py = $('.edit-name_py').last().val();
-    const name_ch = $('.edit-name_ch').last().val();
-    feature.set('name_py', name_py);
-    feature.set('name_ch', name_ch);
+    features.forEach((f, i) => {
+      const $row = $(rows[i]);
+      f.set('name_py', $row.find('.edit-name_py').val());
+      f.set('name_ch', $row.find('.edit-name_ch').val());
+    });
   }
 
   if (typeInteraction.value === 'modify') {
@@ -251,11 +337,15 @@ $('#creategml').click(function () {
       alert('请先在修改模式下选中一个要素');
       return;
     }
-    const updateFeature = selectedFeatures[0];
-    const name_py = $('.edit-name_py').last().val();
-    const name_ch = $('.edit-name_ch').last().val();
-    updateFeature.set('name_py', name_py);
-    updateFeature.set('name_ch', name_ch);
+    const allFeatures = source.getFeatures();
+    selectedFeatures.forEach((sf) => {
+      const idx = allFeatures.indexOf(sf);
+      if (idx >= 0 && idx < rows.length) {
+        const $row = $(rows[idx]);
+        sf.set('name_py', $row.find('.edit-name_py').val());
+        sf.set('name_ch', $row.find('.edit-name_ch').val());
+      }
+    });
   }
 
   // Batch: collect all features, classify by whether they have a fid
@@ -283,6 +373,12 @@ $('#creategml').click(function () {
     alert('提交失败，请查看控制台信息');
   });
 });
+
+// WMS layer toggle
+const wmsToggle = document.getElementById('wmsToggle') as HTMLInputElement;
+wmsToggle.onchange = function () {
+  wmsLayer.setVisible(wmsToggle.checked);
+};
 
 // Immediate mode checkbox
 const immediateMode = document.getElementById('immediateMode') as HTMLInputElement;
@@ -328,6 +424,10 @@ $('#map').click(function (e: any) {
   if (typeInteraction.value !== 'search') {
     return;
   }
+  // Skip clicks from timeline controls
+  if ($(e.target).closest('#timeline-container').length) {
+    return;
+  }
 
   const t4326 = map.getEventCoordinate(e.originalEvent || e);
   const url4326 = baseurl + 'geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&FORMAT=image%2Fpng&TRANSPARENT=true&QUERY_LAYERS=mapgis%3Av6_time_pref_pgn_utf_wgs84_geoserver&LAYERS=mapgis%3Av6_time_pref_pgn_utf_wgs84_geoserver&exceptions=application%2Fvnd.ogc.se_inimage&INFO_FORMAT=application/json&FEATURE_COUNT=50&X=50&Y=50&SRS=EPSG%3A4326&STYLES=&WIDTH=101&HEIGHT=101&BBOX=' + (t4326[0] - 0.0001).toString() + '%2C' + (t4326[1] - 0.0001).toString() + '%2C' + (t4326[0] + 0.0001).toString() + '%2C' + (t4326[1] + 0.0001).toString();
@@ -349,11 +449,11 @@ $('#map').click(function (e: any) {
       const properties = data.features[0].properties;
       const name_py = properties.name_py || '';
       const name_ch = properties.name_ch || '';
-      const tabletxt = '<tr><td>'
-        + '<input type="text" class="edit-fid" value="' + fid + '" readonly />' + '</td><td>'
-        + '<input type="text" class="edit-name_py" value="' + name_py + '" />' + '</td><td>'
-        + '<input type="text" class="edit-name_ch" value="' + name_ch + '" />' + '</td></tr>';
-      $('#attributetbody').append(tabletxt);
+      const $row = $('<tr>');
+      $row.append($('<td>').append($('<input>', { type: 'text', class: 'edit-fid', value: fid, readonly: true })));
+      $row.append($('<td>').append($('<input>', { type: 'text', class: 'edit-name_py', value: name_py })));
+      $row.append($('<td>').append($('<input>', { type: 'text', class: 'edit-name_ch', value: name_ch })));
+      $('#attributetbody').append($row);
     },
     error: function (data: any) {
       console.log('查询失败');
@@ -362,3 +462,18 @@ $('#map').click(function (e: any) {
     },
   });
 });
+
+// Timeline control
+const timeline = new TimelineControl({
+  minYear: -224,
+  maxYear: 1911,
+  initialYear: -224,
+  onChange: (year) => {
+    loadYearFeatures(year);
+  },
+});
+document.getElementById('timeline-container')!.appendChild(timeline.getElement());
+
+// Load initial timeline year
+loadYearFeatures(-224);
+
