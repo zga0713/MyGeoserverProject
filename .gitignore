@@ -32,6 +32,9 @@ gis-infra/postgis-data/
 # Fonts（由 Docker 挂载处理）
 gis-infra/fonts/
 
+# Node
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db

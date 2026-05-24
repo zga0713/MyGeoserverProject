@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>WebGIS 要素编辑器</title>
+  <link rel="stylesheet" href="/datav-style.css">
+  <style>
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="datav-layout">
+    <nav class="datav-navbar">
+      <span class="datav-navbar-title">WebGIS 要素编辑器</span>
+      <span class="datav-navbar-subtitle">OpenLayers 10 + GeoServer</span>
+    </nav>
+
+    <div class="datav-main">
+      <div class="datav-map-area">
+        <div id="map"></div>
+      </div>
+
+      <aside class="datav-panel">
+        <div class="datav-card">
+          <div class="datav-card-title">操作控制</div>
+          <div class="datav-card-body">
+            <form id="operationForm">
+              <div class="datav-form-group">
+                <label class="datav-form-label" for="interaction">操作方式</label>
+                <select id="interaction" class="datav-select">
+                  <option value="search">查看</option>
+                  <option value="insert">增加</option>
+                  <option value="modify">修改</option>
+                  <option value="delete">删除</option>
+                </select>
+              </div>
+              <div id="drawOptions" style="display:none;">
+                <div class="datav-form-group">
+                  <label class="datav-form-label" for="geometryType">几何类型</label>
+                  <select id="geometryType" class="datav-select">
+                    <option value="Polygon" selected>面 (Polygon)</option>
+                    <option value="Point">点 (Point)</option>
+                    <option value="LineString">线 (LineString)</option>
+                    <option value="Circle">圆 (Circle)</option>
+                  </select>
+                </div>
+                <div class="datav-form-group">
+                  <label class="datav-radio">
+                    <input type="checkbox" id="snapToggle" />
+                    启用吸附 (Snap)
+                  </label>
+                </div>
+              </div>
+              <div class="datav-form-group">
+                <div style="display:flex; gap:8px;">
+                  <button type="button" id="undoBtn" class="datav-btn" title="Ctrl+Z">撤销</button>
+                  <button type="button" id="redoBtn" class="datav-btn" title="Ctrl+Y">重做</button>
+                </div>
+              </div>
+              <div class="datav-form-group">
+                <label class="datav-radio">
+                  <input type="checkbox" id="immediateMode" />
+                  立即提交
+                </label>
+              </div>
+              <div class="datav-form-group">
+                <button type="button" id="creategml" class="datav-btn datav-btn-block">提交</button>
+              </div>
+            </form>
+            <div class="datav-info-bar">
+              操作对象后点击提交
+            </div>
+          </div>
+        </div>
+
+        <div class="datav-card">
+          <div class="datav-card-title">属性表</div>
+          <div id="attributetable">
+            <table class="datav-table">
+              <thead>
+                <tr>
+                  <th>fid</th>
+                  <th>name_py</th>
+                  <th>name_ch</th>
+                </tr>
+              </thead>
+              <tbody id="attributetbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="datav-footer">
+      数据来源：GeoServer WFS-T 服务 · 底图：腾讯地图
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

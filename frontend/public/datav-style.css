@@ -1,0 +1,480 @@
+/* ============================================================
+   DataV Visual Style — Global Stylesheet
+   Alibaba Cloud DataV Design System
+   ============================================================
+   Color Tokens:
+     --primary:          #1677ff   (buttons, selected states, highlights)
+     --primary-hover:    #0d66d0
+     --primary-active:   #0958b8
+     --bg-page:          #f5f7fa
+     --bg-white:         #ffffff
+     --bg-select:        #f2f3f5
+     --text-title:       #1f2329
+     --text-body:        #4e5969
+     --text-helper:      #86909c
+     --border:           #e5e6eb
+     --ocean-fill:       #e6f2ff
+   ============================================================ */
+
+/* ---------- CSS Variables / Token ---------- */
+:root {
+  --primary: #1677ff;
+  --primary-hover: #0d66d0;
+  --primary-active: #0958b8;
+  --bg-page: #f5f7fa;
+  --bg-white: #ffffff;
+  --bg-select: #f2f3f5;
+  --text-title: #1f2329;
+  --text-body: #4e5969;
+  --text-helper: #86909c;
+  --border: #e5e6eb;
+  --ocean-fill: #e6f2ff;
+  --radius: 4px;
+  --spacing-page: 16px;
+  --spacing-card: 12px;
+  --navbar-height: 48px;
+  --font-stack: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: var(--font-stack);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-body);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Page Layout ---------- */
+.datav-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  padding: var(--spacing-page);
+  gap: 0;
+}
+
+/* Top Navbar */
+.datav-navbar {
+  flex: 0 0 var(--navbar-height);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-page);
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-card);
+}
+
+.datav-navbar-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-title);
+}
+
+.datav-navbar-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-helper);
+  margin-left: var(--spacing-card);
+}
+
+/* Main content: map + panel */
+.datav-main {
+  flex: 1;
+  display: flex;
+  gap: var(--spacing-card);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Left: Map area */
+.datav-map-area {
+  flex: 0 0 70%;
+  position: relative;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.datav-map-area #map,
+.datav-map-area .map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Right: Control panel */
+.datav-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-card);
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ---------- Card ---------- */
+.datav-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--spacing-card);
+}
+
+.datav-card-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-title);
+  margin-bottom: var(--spacing-card);
+  text-align: left;
+}
+
+.datav-card-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-body);
+}
+
+/* ---------- Select / Dropdown ---------- */
+.datav-select {
+  width: 100%;
+  height: 32px;
+  padding: 0 28px 0 8px;
+  font-size: 14px;
+  font-family: var(--font-stack);
+  color: var(--text-title);
+  background: var(--bg-select);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2386909c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.datav-select:hover {
+  border-color: var(--primary);
+}
+
+.datav-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+/* ---------- Button ---------- */
+.datav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-family: var(--font-stack);
+  font-weight: 400;
+  color: #ffffff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  outline: none;
+  white-space: nowrap;
+}
+
+.datav-btn:hover {
+  background: var(--primary-hover);
+}
+
+.datav-btn:active {
+  background: var(--primary-active);
+  transform: scale(0.97);
+}
+
+.datav-btn-block {
+  width: 100%;
+}
+
+.datav-btn-sm {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+/* ---------- Tab / Tag ---------- */
+.datav-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.datav-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font-stack);
+  color: var(--text-body);
+  background: var(--bg-select);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.datav-tab:hover {
+  color: var(--primary);
+  background: rgba(22, 119, 255, 0.08);
+}
+
+.datav-tab.active {
+  color: #ffffff;
+  background: var(--primary);
+}
+
+/* ---------- Radio ---------- */
+.datav-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.datav-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.datav-radio input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.datav-radio input[type="radio"]:checked {
+  border-color: var(--primary);
+  background: var(--bg-white);
+  box-shadow: inset 0 0 0 4px var(--primary);
+}
+
+.datav-radio input[type="radio"]:hover {
+  border-color: var(--primary);
+}
+
+/* ---------- Input ---------- */
+.datav-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 14px;
+  font-family: var(--font-stack);
+  color: var(--text-title);
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.2s ease;
+  text-align: left;
+}
+
+.datav-input:hover {
+  border-color: var(--primary);
+}
+
+.datav-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+/* Input with trailing icon */
+.datav-input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.datav-input-group .datav-input {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.datav-input-group-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-top-right-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-helper);
+  transition: color 0.2s ease;
+}
+
+.datav-input-group-btn:hover {
+  color: var(--primary);
+}
+
+/* ---------- Form Groups ---------- */
+.datav-form-group {
+  margin-bottom: var(--spacing-card);
+}
+
+.datav-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.datav-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-body);
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+/* ---------- Table ---------- */
+.datav-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.datav-table th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-helper);
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-page);
+}
+
+.datav-table td {
+  font-size: 13px;
+  color: var(--text-body);
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.datav-table tbody tr:hover {
+  background: rgba(22, 119, 255, 0.04);
+}
+
+.datav-table td input {
+  width: 100%;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 13px;
+  font-family: var(--font-stack);
+  color: var(--text-title);
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  text-align: left;
+  transition: border-color 0.2s ease;
+}
+
+.datav-table td input:hover {
+  border-color: var(--primary);
+}
+
+.datav-table td input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+/* ---------- Map overlay controls (fallback for old-style pages) ---------- */
+.datav-map-overlay {
+  position: absolute;
+  top: var(--spacing-card);
+  left: var(--spacing-card);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ---------- Footer ---------- */
+.datav-footer {
+  flex: 0 0 auto;
+  text-align: left;
+  padding: 8px var(--spacing-page) 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-helper);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-helper);
+}
+
+/* ---------- Tooltip-like info bar ---------- */
+.datav-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px var(--spacing-card);
+  background: var(--bg-page);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--text-helper);
+}
